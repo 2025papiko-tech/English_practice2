@@ -156,12 +156,15 @@
 <div class="container">
     <header>
         <h1>TOEIC 800+ English Prep</h1>
-        <p style="font-size: 0.9rem; margin: 0; color: #64748b;">CEFR B2レベル突破・カスタマイズ演習システム</p>
+        <p style="font-size: 0.9rem; margin: 0; color: #64748b;">CEFR B2レベル突破・重複なしカスタム演習システム</p>
     </header>
 
+    <!-- 設定セクション -->
     <div class="card">
-        <h2 style="border: none; padding: 0; margin-bottom: 5px;">⚙️ 学習対象カテゴリ・出題数の設定</h2>
-        <p style="font-size:0.85rem; color:#64748b; margin:0 0 10px 0;">チェックを入れた項目のみが出題・履歴確認の対象になります（空欄時は全種類出題）。</p>
+        <div class="flex-header" style="border:none; margin-bottom:10px;">
+            <h2 style="border: none; padding: 0; margin:0;">⚙️ 学習対象カテゴリ・出題数の設定</h2>
+        </div>
+        <p style="font-size:0.85rem; color:#64748b; margin:0 0 10px 0;">チェックを入れた項目のみが出題対象になります（すべて未チェック時は全種類混合）。</p>
         
         <div class="tracker-grid">
             <label class="tracker-item"><input type="checkbox" id="chk-word" onchange="saveProgress()"> 📊 単語問題</label>
@@ -171,22 +174,24 @@
         </div>
 
         <div class="config-row">
-            <label for="quiz-count">📋 <b>本日の出題数:</b></label>
+            <label for="quiz-count">📋 <b>希望出題数:</b></label>
             <input type="number" id="quiz-count" value="10" min="1" max="30"> 問
         </div>
 
-        <button type="button" class="btn btn-info" onclick="applySettingsAndCheck()">🔄 上記の設定をアプリに反映して弱点を確認する</button>
+        <button type="button" class="btn btn-info" onclick="applySettingsAndCheck()">🔄 設定を反映してテスト開始＆弱点確認</button>
     </div>
 
+    <!-- 弱点履歴表示エリア -->
     <div class="card" id="history-section">
         <h2>⚠️ 選択したカテゴリの過去の間違い・弱点</h2>
         <div id="history-content"></div>
     </div>
 
+    <!-- 問題出題セクション -->
     <div class="card">
         <div class="flex-header">
             <h2 style="margin: 0; border: none; padding: 0;">📝 演習問題演習エリア (<span id="display-q-count">10</span>問)</h2>
-            <button type="button" class="btn btn-secondary" style="width: auto; align-self: flex-start;" onclick="refreshQuestions()">🔄 別の問題に入れ替え</button>
+            <button type="button" class="btn btn-secondary" style="width: auto; align-self: flex-start;" onclick="refreshQuestions()">🔄 別の問題シャッフル</button>
         </div>
         
         <form id="quiz-form">
@@ -197,6 +202,7 @@
         </form>
     </div>
 
+    <!-- 結果・採点セクション -->
     <div class="card" id="result-section">
         <h2>📊 採点結果</h2>
         <div class="score-display" id="score-text">0点 / 100点</div>
@@ -205,87 +211,167 @@
 </div>
 
 <script>
-// --- 問題データベース（日本語訳、5文型SVOCM構造を追加） ---
+// --- 大幅に補強した問題データベース（全カテゴリ増量、重複対策用IDを完全差別化） ---
 const questionBank = {
     word: [
-        { id: 'W1', type: 'word', tag: '単語 (B2)', q: "The CEO decided to ________ the company's expansion plans due to economic uncertainty.", options: ["defer", "alleviate", "fluctuate", "adhere"], answer: 0, 
+        { id: 'W01', type: 'word', tag: '単語 (B2)', q: "The CEO decided to ________ the company's expansion plans due to economic uncertainty.", options: ["defer", "alleviate", "fluctuate", "adhere"], answer: 0, 
           explanation: "defer（延期する）が正解。経済不確実性を理由に計画を延期します。[他] alleviate(緩和する), fluctuate(変動する)", 
           translation: "最高経営責任者（CEO）は、経済の先行き不透明感を理由に、会社の拡大計画を延期することを決定した。",
           svoc: "<span class='svoc-text'>第3文型 (S V O + M)</span><br><b>S:</b> The CEO / <b>V:</b> decided / <b>O:</b> to defer the company's expansion plans (不定詞句)<br><b>M:</b> due to economic uncertainty (原因を表す修飾語句)",
           weakType: 'word_defer', title: "defer (延期する)" },
-        { id: 'W2', type: 'word', tag: '単語 (B2)', q: "The marketing campaign was highly ________, resulting in a 40% increase in regional sales.", options: ["lucrative", "redundant", "ambiguous", "stringent"], answer: 0, 
+        { id: 'W02', type: 'word', tag: '単語 (B2)', q: "The marketing campaign was highly ________, resulting in a 40% increase in regional sales.", options: ["lucrative", "redundant", "ambiguous", "stringent"], answer: 0, 
           explanation: "lucrative（利益の上がる、実りの多い）が正解。40%の売上増という結果と一致します。", 
           translation: "そのマーケティングキャンペーンは非常に実り多く、結果として地域売上の40%増加をもたらした。",
-          svoc: "<span class='svoc-text'>第2文型 (S V C + M)</span><br><b>S:</b> The marketing campaign / <b>V:</b> was / <b>C:</b> highly lucrative<br><b>M:</b> resulting in a 40% increase in regional sales (分詞構文による修飾表現)",
+          svoc: "<span class='svoc-text'>第2文型 (S V C + M)</span><br><b>S:</b> The marketing campaign / <b>V:</b> was / <b>C:</b> highly lucrative<br><b>M:</b> resulting in a 40% increase in regional sales (分詞構文による修飾)",
           weakType: 'word_lucrative', title: "lucrative (利益の上がる)" },
-        { id: 'W3', type: 'word', tag: '単語 (C1)', q: "She handles customer complaints with great ________, always maintaining her composure.", options: ["adversity", "tact", "discrepancy", "relevance"], answer: 1, 
+        { id: 'W03', type: 'word', tag: '単語 (C1)', q: "She handles customer complaints with great ________, always maintaining her composure.", options: ["adversity", "tact", "discrepancy", "relevance"], answer: 1, 
           explanation: "tact（機転、如才なさ）が正解。冷静さを保ちつつ上手に対応する能力を指します。", 
           translation: "彼女は常に冷静さを保ちながら、素晴らしい機転を利かせて顧客の苦情を処理している。",
           svoc: "<span class='svoc-text'>第3文型 (S V O + M)</span><br><b>S:</b> She / <b>V:</b> handles / <b>O:</b> customer complaints<br><b>M:</b> with great tact (副詞句) / always maintaining her composure (分詞句修飾)",
           weakType: 'word_tact', title: "tact (機転・如才なさ)" },
-        { id: 'W4', type: 'word', tag: '単語 (B2)', q: "The new regulations will ________ a complete overhaul of our current safety protocols.", options: ["necessitate", "preclude", "advocate", "curtail"], answer: 0, 
+        { id: 'W04', type: 'word', tag: '単語 (B2)', q: "The new regulations will ________ a complete overhaul of our current safety protocols.", options: ["necessitate", "preclude", "advocate", "curtail"], answer: 0, 
           explanation: "necessitate（〜を必要とさせる）が正解。新しい規制によって見直しが必要になります。", 
           translation: "新しい規制は、私たちの現在の安全プロトコルの全面的な見直しを必要とさせるだろう。",
           svoc: "<span class='svoc-text'>第3文型 (S V O)</span><br><b>S:</b> The new regulations / <b>V:</b> will necessitate / <b>O:</b> a complete overhaul of our current safety protocols",
           weakType: 'word_necessitate', title: "necessitate (必要とする)" },
-        { id: 'W5', type: 'word', tag: '単語 (B2)', q: "We need to find a ________ solution that addresses both budgetary constraints and quality requirements.", options: ["viable", "volatile", "vague", "vulnerable"], answer: 0, 
+        { id: 'W05', type: 'word', tag: '単語 (B2)', q: "We need to find a ________ solution that addresses both budgetary constraints and quality requirements.", options: ["viable", "volatile", "vague", "vulnerable"], answer: 0, 
           explanation: "viable（実行可能な、実用的な）が正解。予算と品質を両立させる「現実的な解決策」を指します。", 
           translation: "私たちは、予算の制約と品質の要求の両方に対応する、実行可能な解決策を見つける必要がある。",
           svoc: "<span class='svoc-text'>第3文型 (S V O)</span><br><b>S:</b> We / <b>V:</b> need / <b>O:</b> to find a viable solution (不定詞句)<br>※solutionの後に続くthat以下は、solutionを修飾する関係代名詞節(M)",
-          weakType: 'word_viable', title: "viable (実行可能な)" }
+          weakType: 'word_viable', title: "viable (実行可能な)" },
+        { id: 'W06', type: 'word', tag: '単語 (C1)', q: "The board of directors gave their ________ approval to the proposed merger during yesterday's session.", options: ["unanimous", "preliminary", "hazardous", "ambiguous"], answer: 0, 
+          explanation: "unanimous（満場一致の）が正解。board全体（取締役会）の合意を指す頻出単語です。", 
+          translation: "取締役会は昨日の会議で、提案された合併に対して満場一致の承認を与えた。",
+          svoc: "<span class='svoc-text'>第3文型 (S V O + M)</span><br><b>S:</b> The board of directors / <b>V:</b> gave / <b>O:</b> their unanimous approval / <b>M:</b> to the proposed merger / during yesterday's session",
+          weakType: 'word_unanimous', title: "unanimous (満場一致の)" },
+        { id: 'W07', type: 'word', tag: '単語 (B2)', q: "Due to a technical failure, the production line will be ________ operational until tomorrow morning.", options: ["partially", "densely", "rigidly", "mutually"], answer: 0, 
+          explanation: "partially（部分的に）が正解。技術的障害のため全面稼働できない状態を示します。", 
+          translation: "技術的な故障のため、製造ラインは明日の朝まで部分的にしか稼働しない予定だ。",
+          svoc: "<span class='svoc-text'>第2文型 (S V C + M)</span><br><b>M:</b> Due to a technical failure (理由の副詞句) / <b>S:</b> the production line / <b>V:</b> will be / <b>C:</b> operational / <b>M:</b> partially (副詞) / until tomorrow morning",
+          weakType: 'word_partially', title: "partially (部分的に)" },
+        { id: 'W08', type: 'word', tag: '単語 (B2)', q: "The company’s revenue has begun to ________ after two quarters of steady decline.", options: ["rebound", "deplete", "deteriorate", "shrink"], answer: 0, 
+          explanation: "rebound（回復する、立ち直る）が正解。下落のあとに回復し始めた流れに一致します。", 
+          translation: "２四半期連続の着実な減少を経て、会社の収益は回復し始めた。",
+          svoc: "<span class='svoc-text'>第3文型 (S V O + M)</span><br><b>S:</b> The company’s revenue / <b>V:</b> has begun / <b>O:</b> to rebound (不定詞句)<br><b>M:</b> after two quarters of steady decline (修飾語)",
+          weakType: 'word_rebound', title: "rebound (回復する)" },
+        { id: 'W09', type: 'word', tag: '単語 (C1)', q: "Mr. Kim is an ________ negotiator who can resolve disputes swiftly and harmoniously.", options: ["astute", "obsolete", "abrupt", "extravagant"], answer: 0, 
+          explanation: "astute（抜け目のない、敏腕な）が正解。 dispute(紛争)を素早く調和的に解決できる能力を賞賛する文脈。", 
+          translation: "キム氏は、紛争を迅速かつ円満に解決できる敏腕な交渉人である。",
+          svoc: "<span class='svoc-text'>第2文型 (S V C)</span><br><b>S:</b> Mr. Kim / <b>V:</b> is / <b>C:</b> an astute negotiator<br>※who以下はnegotiatorを修飾する関係代名詞節(M)",
+          weakType: 'word_astute', title: "astute (抜け目のない)" },
+        { id: 'W10', type: 'word', tag: '単語 (B2)', q: "Please ensure that your medical report is signed by a ________ health practitioner.", options: ["certified", "liable", "speculative", "superficial"], answer: 0, 
+          explanation: "certified（公認の、資格を持つ）が正解。有資格の医療従事者の署名を求めています。", 
+          translation: "医療報告書には、公認の医療従事者による署名がなされていることを確認してください。",
+          svoc: "<span class='svoc-text'>第3文型 (S V O) ※命令文</span><br><b>(S):</b> 省略 / <b>V:</b> Please ensure / <b>O:</b> that your medical report is signed... (that名詞節)",
+          weakType: 'word_certified', title: "certified (公認の)" }
     ],
     grammar: [
-        { id: 'G1', type: 'grammar', tag: '文法 (時制)', q: "By the time the new manager arrives next month, the team ________ the project for half a year.", options: ["will have been conducting", "has conducted", "conducted", "is conducting"], answer: 0, 
+        { id: 'G01', type: 'grammar', tag: '文法 (時制)', q: "By the time the new manager arrives next month, the team ________ the project for half a year.", options: ["will have been conducting", "has conducted", "conducted", "is conducting"], answer: 0, 
           explanation: "未来完了進行形が正解。来月の基準点の時点で「半年間の継続」を表します。", 
           translation: "来月新しいマネージャーが到着するまでに、チームはそのプロジェクトを半年間ずっと実施していることになる。",
-          svoc: "<span class='svoc-text'>第3文型 (S V O + M)</span><br><b>M:</b> By the time the new manager arrives next month (副詞節)<br><b>S:</b> the team / <b>V:</b> will have been conducting / <b>O:</b> the project<br><b>M:</b> for half a year (期間の修飾語)",
+          svoc: "<span class='svoc-text'>第3文型 (S V O + M)</span><br><b>M:</b> By the time the new manager arrives next month (副詞節)<br><b>S:</b> the team / <b>V:</b> will have been conducting / <b>O:</b> the project / <b>M:</b> for half a year",
           weakType: 'grammar_tense', title: "未来完了進行形" },
-        { id: 'G2', type: 'grammar', tag: '文法 (比較級)', q: "The implementation of the new software proved to be ________ more challenging than anticipated.", options: ["very", "far", "so", "as"], answer: 1, 
+        { id: 'G02', type: 'grammar', tag: '文法 (比較級)', q: "The implementation of the new software proved to be ________ more challenging than anticipated.", options: ["very", "far", "so", "as"], answer: 1, 
           explanation: "比較級(more...)を強調できる副詞は「far」や「much」です。", 
           translation: "新しいソフトウェアの導入は、予想されていたよりも遥かに困難であることが判明した。",
-          svoc: "<span class='svoc-text'>第2文型 (S V C + M)</span><br><b>S:</b> The implementation of the new software / <b>V:</b> proved / <b>C:</b> to be far more challenging (補語となる不定詞句)<br><b>M:</b> than anticipated (比較対象の修飾句)",
+          svoc: "<span class='svoc-text'>第2文型 (S V C + M)</span><br><b>S:</b> The implementation of the new software / <b>V:</b> proved / <b>C:</b> to be far more challenging (補語となる不定詞句) / <b>M:</b> than anticipated",
           weakType: 'grammar_comparative', title: "比較級の強調" },
-        { id: 'G3', type: 'grammar', tag: '文法 (仮定法)', q: "If the technical issue ________ resolved yesterday, our clients would be satisfied now.", options: ["had been", "was", "has been", "would have been"], answer: 0, 
+        { id: 'G03', type: 'grammar', tag: '文法 (仮定法)', q: "If the technical issue ________ resolved yesterday, our clients would be satisfied now.", options: ["had been", "was", "has been", "would have been"], answer: 0, 
           explanation: "過去の条件（If+過去完了）と現在の結果（would+原形）を組み合わせた混成仮定法です。", 
           translation: "もしその技術的な問題が昨日解決されていたなら、クライアントは今頃満足していただろうに。",
-          svoc: "<span class='svoc-text'>第2文型 (S V C + M)</span><br><b>M:</b> If the technical issue had been resolved yesterday (条件を表す副詞節)<br><b>S:</b> our clients / <b>V:</b> would be / <b>C:</b> satisfied<br><b>M:</b> now (時を表す副詞)",
+          svoc: "<span class='svoc-text'>第2文型 (S V C + M)</span><br><b>M:</b> If the technical issue had been resolved yesterday (条件を表す副詞節)<br><b>S:</b> our clients / <b>V:</b> would be / <b>C:</b> satisfied / <b>M:</b> now",
           weakType: 'grammar_conditional', title: "混成仮定法" },
-        { id: 'G4', type: 'grammar', tag: '文法 (時制)', q: "Ever since the merger was announced last week, the stock prices ________ unpredictably.", options: ["have been fluctuating", "fluctuated", "are fluctuating", "had fluctuated"], answer: 0, 
+        { id: 'G04', type: 'grammar', tag: '文法 (時制)', q: "Ever since the merger was announced last week, the stock prices ________ unpredictably.", options: ["have been fluctuating", "fluctuated", "are fluctuating", "had fluctuated"], answer: 0, 
           explanation: "「Ever since（～以来ずっと）」という過去の起点から現在までの継続を表す現在完了進行形が最適です。", 
           translation: "先週合併が発表されて以来ずっと、株価は予測不可能に変動し続けている。",
-          svoc: "<span class='svoc-text'>第1文型 (S V + M)</span><br><b>M:</b> Ever since the merger was announced last week (副詞節)<br><b>S:</b> the stock prices / <b>V:</b> have been fluctuating<br><b>M:</b> unpredictably (副詞修飾語)",
-          weakType: 'grammar_since', title: "Ever since構文" }
+          svoc: "<span class='svoc-text'>第1文型 (S V + M)</span><br><b>M:</b> Ever since the merger was announced last week (副詞節) / <b>S:</b> the stock prices / <b>V:</b> have been fluctuating / <b>M:</b> unpredictably",
+          weakType: 'grammar_since', title: "Ever since構文" },
+        { id: 'G05', type: 'grammar', tag: '文法 (関係代名詞)', q: "The candidate ________ portfolio was reviewed yesterday has been invited for a final interview.", options: ["whose", "whom", "who", "which"], answer: 0, 
+          explanation: "先行詞candidateと名詞portfolio（作品集）を「その候補者の〜」という所有の関係で繋ぐため、関係代名詞の所有格「whose」が正解です。", 
+          translation: "昨日ポートフォリオ（作品集）を審査された候補者は、最終面接に招待された。",
+          svoc: "<span class='svoc-text'>第1文型 (S V + M)</span><br><b>S:</b> The candidate (※whose～yesterdayはSを修飾するM) / <b>V:</b> has been invited / <b>M:</b> for a final interview",
+          weakType: 'grammar_whose', title: "所有格 whose" },
+        { id: 'G06', type: 'grammar', tag: '文法 (分詞構文)', q: "________ by the unexpected surge in online sales, the logistics team requested additional staff.", options: ["Overwhelmed", "Overwhelming", "Overwhelm", "Having overwhelmed"], answer: 0, 
+          explanation: "分詞構文問題。主節の主語（the logistics team）がオンライン販売の急増に「圧倒された」という受動の関係になるため、過去分詞Overwhelmedが正解。", 
+          translation: "オンライン売上の予想外の急増に圧倒された物流チームは、人員の追加を要請した。",
+          svoc: "<span class='svoc-text'>第3文型 (S V O)</span><br><b>M:</b> Overwhelmed by the unexpected surge... (分詞構文) / <b>S:</b> the logistics team / <b>V:</b> requested / <b>O:</b> additional staff",
+          weakType: 'grammar_participle', title: "過去分詞の分詞構文" },
+        { id: 'G07', type: 'grammar', tag: '文法 (倒置)', q: "Under no circumstances ________ employees disclose client passwords to third parties.", options: ["should", "will have", "are", "did"], answer: 0, 
+          explanation: "否定語句「Under no circumstances（いかなる状況でも〜ない）」が文頭に出ているため、後ろが疑問文の語順（助動詞＋主語＋動詞の原形）になる倒置構文です。", 
+          translation: "いかなる状況であっても、従業員が顧客のパスワードを第三者に開示してはならない。",
+          svoc: "<span class='svoc-text'>第3文型 (S V O + M) 倒置型</span><br><b>M:</b> Under no circumstances / <b>助動詞:</b> should / <b>S:</b> employees / <b>V:</b> disclose / <b>O:</b> client passwords / <b>M:</b> to third parties",
+          weakType: 'grammar_inversion', title: "否定語句文頭倒置" },
+        { id: 'G08', type: 'grammar', tag: '文法 (接続詞/前置詞)', q: "The construction project proceeded on schedule ________ the heavy rain on opening day.", options: ["despite", "although", "whereas", "provided that"], answer: 0, 
+          explanation: "後ろに名詞句（the heavy rain...）が続いているため、前置詞の「despite（〜にもかかわらず）」が正解。[他] although, whereasは接続詞なのでSVが必要です。", 
+          translation: "初日の激しい雨にもかかわらず、建設プロジェクトは予定通りに進んだ。",
+          svoc: "<span class='svoc-text'>第1文型 (S V + M)</span><br><b>S:</b> The construction project / <b>V:</b> proceeded / <b>M:</b> on schedule / despite the heavy rain on opening day",
+          weakType: 'grammar_preposition', title: "前置詞 despite" },
+    　　　　id: 'G09', type: 'grammar', tag: '文法 (名詞節)', q: "The legal department handles ________ relates to intellectual property disputes.", options: ["whatever", "whomever", "which", "wherever"], answer: 0, 
+          explanation: "動詞handlesの目的語（名詞節）を作り、かつ節内の主語になれる複合関係代名詞「whatever（〜するものは何でも）」が正解です。", 
+          translation: "法務部は、知的財産の紛争に関することなら何でも処理する。",
+          svoc: "<span class='svoc-text'>第3文型 (S V O)</span><br><b>S:</b> The legal department / <b>V:</b> handles / <b>O:</b> whatever relates to intellectual property disputes (名詞節が目的語)",
+          weakType: 'grammar_whatever', title: "複合関係代名詞 whatever" },
+        { id: 'G10', type: 'grammar', tag: '文法 (使役動詞)', q: "The training coordinators had all the new hires ________ the security compliance test.", options: ["take", "taken", "to take", "took"], answer: 0, 
+          explanation: "使役動詞の「have + 人 + 原形不定詞（人に〜させる）」の構文です。new hires（新採用者）がテストを「受ける」という能動関係なので原形takeが入ります。", 
+          translation: "研修コーディネーターは、すべての新採用者にセキュリティコンプライアンステストを受けさせた。",
+          svoc: "<span class='svoc-text'>第5文型 (S V O C)</span><br><b>S:</b> The training coordinators / <b>V:</b> had / <b>O:</b> all the new hires / <b>C:</b> take the security compliance test (原形不定詞句が補語)",
+          weakType: 'grammar_causative', title: "使役動詞 have" }
     ],
     pron: [
-        { id: 'P1', type: 'pron', tag: '音声変化 (連結)', q: "ネイティブがフレーズ 'Check it out' を滑らかに発音した時、最も近い発音はどれか？", options: ["チェック・イット・アウト", "チェキダウ(ト)", "チェッイッアウ", "チェキラウ"], answer: 1, 
+        { id: 'P01', type: 'pron', tag: '音声変化 (連結)', q: "ネイティブがフレーズ 'Check it out' を滑らかに発音した時、最も近い発音はどれか？", options: ["チェック・イット・アウト", "チェキダウ(ト)", "チェッイッアウ", "チェキラウ"], answer: 1, 
           explanation: "【リンキング＆フラップT】Checkの[k]とitの[i]が合体。さらにitの[t]が母音に挟まれて日本語のラ行・ダ行のように変化します。", 
           translation: "（それを）確認してみよう！ / チェックしてみて！",
           svoc: "<span class='svoc-text'>第3文型 (命令文 V O + M)</span><br><b>(S):</b> 省略 / <b>V:</b> Check / <b>O:</b> it / <b>M:</b> out (副詞)",
           weakType: 'pron_linking', title: "Check it out の連結" },
-        { id: 'P2', type: 'pron', tag: '音声変化 (脱落)', q: "文中で 'I don't know' が早口で発音される際、[t]の音が消えてどのように聞こえるか？", options: ["アイ ドント ノウ", "アイ ドン ノウ", "アイ ドッノウ", "アドノ"], answer: 1, 
+        { id: 'P02', type: 'pron', tag: '音声変化 (脱落)', q: "文中で 'I don't know' が早口で発音される際、[t]の音が消えてどのように聞こえるか？", options: ["アイ ドント ノウ", "アイ ドン ノウ", "アイ ドッノウ", "アドノ"], answer: 1, 
           explanation: "【リダクション（脱落）】破裂音[t]の後に子音[n]が続くため、[t]の破裂がなくなり「アイ ドン ノウ」に聞こえます。", 
           translation: "私は（それを）知りません。",
-          svoc: "<span class='svoc-text'>第3文型 (S V O)</span><br><b>S:</b> I / <b>V:</b> don't know / <b>O:</b> (itなどの目的語が会話上省略されています)",
+          svoc: "<span class='svoc-text'>第3文型 (S V O)</span><br><b>S:</b> I / <b>V:</b> don't know / <b>O:</b> (会話上省略された目的語)",
           weakType: 'pron_reduction', title: "don't の [t] 脱落" },
-        { id: 'P3', type: 'pron', tag: '音声変化 (フラップT)', q: "‘meeting’ や ‘better’ の [t] 音が、アメリカ英語のネイティブスピーカーに最も近く発音されているものはどれか？", options: ["ミーティング / ベター", "ミッイン / ベッアー", "ミーリング / ベラー", "ミースィング / ベサー"], answer: 2, 
-          explanation: "【フラップT】母音に挟まれた[t]音は、舌先を弾くため日本語のラ行（d音に近い）の音（ミーリング/ベラー）に変形します。", 
+        { id: 'P03', type: 'pron', tag: '音声変化 (フラップT)', q: "‘meeting’ や ‘better’ の [t] 音が、アメリカ英語のネイティブスピーカーに最も近く発音されているものはどれか？", options: ["ミーティング / ベター", "ミッイン / ベッアー", "ミーリング / ベラー", "ミースィング / ベサー"], answer: 2, 
+          explanation: "【フラップT】母音に挟まれた[t]音は、完全に破裂させず舌先を弾くため日本語のラ行に近い音に変形します。", 
           translation: "会議 / より良い",
-          svoc: "<span class='svoc-text'>単語のため文型対象外</span><br>名詞「meeting」および形容詞・副詞「better」の単体発音ルールです。",
-          weakType: 'pron_flapt', title: "meeting/betterのフラップ" }
+          svoc: "<span class='svoc-text'>単語のため文型対象外</span><br>名詞「meeting」および形容詞「better」の単体発音ルールです。",
+          weakType: 'pron_flapt', title: "meeting/betterのフラップ" },
+        { id: 'P04', type: 'pron', tag: '音声変化 (同化)', q: "フレーズ 'Could you send me...' が早口で発音される際の、'Could you' の最も近い発音はどれか？", options: ["クッド ユー", "クジュー", "クユー", "クッツー"], answer: 1, 
+          explanation: "【音の同化】[d]の音と後ろの[y]の音が融合して、「ヂュ」「ジュ」のような音に変化します。", 
+          translation: "私に（〜を）送っていただけますか？",
+          svoc: "<span class='svoc-text'>第4文型 (V O1 O2)</span><br><b>(S):</b> 省略 / <b>V:</b> Could you send / <b>O1:</b> me (間接目的語) / <b>O2:</b> (直接目的語が続く構造)",
+          weakType: 'pron_assimilation', title: "Could you の同化" },
+        { id: 'P05', type: 'pron', tag: '音声変化 (脱落)', q: "フレーズ 'next week' をネイティブが自然に発音した際、省略されて消えやすい音はどれか？", options: ["xtの[t]", "neの[e]", "eeの[i:]", "kの[k]"], answer: 0, 
+          explanation: "【リダクション（脱落）】[xt]の[t]の後に子音[w]が続くため、真ん中にある[t]音が発音されず「ネクスウィーク」のように聞こえます。", 
+          translation: "来週",
+          svoc: "<span class='svoc-text'>単語のため文型対象外</span><br>「next week（来週）」の副詞・名詞句表現における音声変化です。",
+          weakType: 'pron_nextweek', title: "next week の脱落" },
+        { id: 'P06', type: 'pron', tag: '音声変化 (弱化)', q: "文中で 'for' (例: for business) が早く、弱く発音される際、母音はどのように変化するか？", options: ["ハッキリと『フォー』と伸ばす", "『ファ』や『フ』に近い短い曖昧な音になる", "『フー』に変わる", "完全に消えて発音されない"], answer: 1, 
+          explanation: "【弱化 (Weak Form)】前置詞などの機能語は強くストレスが置かれない限り、母音が弱化して「シュワ音（曖昧母音）」となり、「ファ」に近い短い音になります。", 
+          translation: "仕事で / 出張で",
+          svoc: "<span class='svoc-text'>修飾語句(M)</span><br>前置詞 for + 名詞 business による副詞句の音声ルールです。",
+          weakType: 'pron_weak_for', title: "for の弱化" },
+        { id: 'P07', type: 'pron', tag: '音声変化 (連結)', q: "フレーズ 'an asset' が1語のようになめらかに発音されたとき、最も近い発音はどれか？", options: ["アン・アセット", "アナセット", "ア・セット", "アン・セット"], answer: 1, 
+          explanation: "【リンキング（連結）】子音で終わる単語（anの[n]）の直後に母音（assetの[æ]）が来ると、音が切れずに「アナセット」と繋がります。", 
+          translation: "資産 / 役に立つ存在",
+          svoc: "<span class='svoc-text'>単語のため文型対象外</span><br>冠詞 an + 名詞 asset の連結発音です。",
+          weakType: 'pron_an_asset', title: "an asset の連結" },
+        { id: 'P08', type: 'pron', tag: '音声変化 (脱落)', q: "フレーズ 'must be' を早口で発音したとき、最も聞こえなくなりやすい音はどれか？", options: ["mの音", "uの音", "tの音", "bの音"], answer: 2, 
+          explanation: "【子音の脱落】[st]の[t]の直後に子音[b]が重なるため、3連続子音の真ん中である[t]の破裂がなくなり「マスビー」のようになります。", 
+          translation: "〜に違いない / 〜でなければならない",
+          svoc: "<span class='svoc-text'>助動詞＋動詞部分</span><br>文中で V (動詞) の一部を構成する助動詞フレーズの変化です。",
+          weakType: 'pron_must_be', title: "must be の [t] 脱落" }
     ]
 };
 
 // 苦手克服用の代替問題
 const weakAlternativeBank = {
-    'word_defer': { id: 'W1_alt', type: 'word', tag: '苦手克服 (単語)', q: "The heavy storm forced the committee to ________ the annual outdoor gala.", options: ["postpone", "accelerate", "embody", "speculate"], answer: 0, 
+    'word_defer': { id: 'W_ALT01', type: 'word', tag: '苦手克服 (単語)', q: "The heavy storm forced the committee to ________ the annual outdoor gala.", options: ["postpone", "accelerate", "embody", "speculate"], answer: 0, 
       explanation: "deferの類似問題。postpone（延期する）が文脈上正解です。", 
       translation: "激しい嵐のため、委員会は年に一度の屋外祝賀会を延期せざるを得なかった。",
-      svoc: "<span class='svoc-text'>第5文型 (S V O C)</span><br><b>S:</b> The heavy storm / <b>V:</b> forced / <b>O:</b> the committee / <b>C:</b> to postpone the annual outdoor gala (不定詞句が補語)",
+      svoc: "<span class='svoc-text'>第5文型 (S V O C)</span><br><b>S:</b> The heavy storm / <b>V:</b> forced / <b>O:</b> the committee / <b>C:</b> to postpone the annual outdoor gala (不定詞句)",
       weakType: 'word_defer', title: "defer代替" },
-    'grammar_tense': { id: 'G1_alt', type: 'grammar', tag: '苦手克服 (時制)', q: "By next Friday, I ________ here for exactly ten years.", options: ["will have worked", "am working", "have worked", "worked"], answer: 0, 
+    'grammar_tense': { id: 'G_ALT01', type: 'grammar', tag: '苦手克服 (時制)', q: "By next Friday, I ________ here for exactly ten years.", options: ["will have worked", "am working", "have worked", "worked"], answer: 0, 
       explanation: "未来の基準点（By next Friday）があるため、未来完了「will have worked」が正解。", 
       translation: "来週の金曜日で、私はここにちょうど10年間勤めていることになります。",
-      svoc: "<span class='svoc-text'>第1文型 (S V + M)</span><br><b>M:</b> By next Friday (時を表す副詞句) / <b>S:</b> I / <b>V:</b> will have worked / <b>M:</b> here (副詞) / for exactly ten years (期間の副詞句)",
+      svoc: "<span class='svoc-text'>第1文型 (S V + M)</span><br><b>M:</b> By next Friday (時を表す副詞句) / <b>S:</b> I / <b>V:</b> will have worked / <b>M:</b> here / for exactly ten years",
       weakType: 'grammar_tense', title: "時制代替" }
 };
 
@@ -341,7 +427,6 @@ function removeWeakType(type) {
     localStorage.setItem('toeic_app_weak', JSON.stringify(weaks));
 }
 
-// 安定シャッフル関数
 function shuffleArray(array) {
     var clone = array.slice(0);
     for (var i = clone.length - 1; i > 0; i--) {
@@ -353,11 +438,9 @@ function shuffleArray(array) {
     return clone;
 }
 
-// ボタン流用機能：チェックに基づいて弱点確認を行い、かつ問題も即座に再生成する
 function applySettingsAndCheck() {
     saveProgress();
     
-    // 1. 弱点の確認表示
     var showWord = document.getElementById('chk-word').checked;
     var showGrammar = document.getElementById('chk-grammar').checked;
     var showPron = document.getElementById('chk-pron').checked;
@@ -367,7 +450,6 @@ function applySettingsAndCheck() {
     var historySection = document.getElementById('history-section');
     var historyContent = document.getElementById('history-content');
 
-    // もしすべて未チェックなら全表示扱いにするロジック
     var noCheck = (!showWord && !showGrammar && !showPron && !showReview);
 
     var html = '';
@@ -386,7 +468,7 @@ function applySettingsAndCheck() {
         if (showWord && item.type === 'word') isTarget = true;
         if (showGrammar && item.type === 'grammar') isTarget = true;
         if (showPron && item.type === 'pron') isTarget = true;
-if (showReview) isTarget = true;
+        if (showReview) isTarget = true;
 
         if (isTarget) {
             seenWeakTypes[item.weakType] = true;
@@ -401,7 +483,7 @@ if (showReview) isTarget = true;
     });
 
     if (noCheck && weaks.length > 0) {
-        // 何もチェックがなくて弱点がある場合は全量を出す
+        // 全表示
     } else if (matchCount === 0 && !noCheck) {
         html = '<div class="feedback-box">🎉 選択されたカテゴリに現在記録されている弱点はありません！</div>';
     }
@@ -413,80 +495,73 @@ if (showReview) isTarget = true;
         historySection.style.display = 'none';
     }
 
-    // 2. 下部の演習問題をこの設定で即座に作り直す
     generateQuiz();
 }
 
-// 【コア機能】ユーザーの設定（カテゴリチェック、出題数）を完全に反映して問題作成
+// 【アップデート】完全な重複ガード付きクイズ生成ロジック
 function generateQuiz() {
     var showWord = document.getElementById('chk-word').checked;
     var showGrammar = document.getElementById('chk-grammar').checked;
     var showPron = document.getElementById('chk-pron').checked;
     var showReview = document.getElementById('chk-review').checked;
     
-    // 設定された出題数を取得（未入力なら10問）
     var targetCount = parseInt(document.getElementById('quiz-count').value);
     if (isNaN(targetCount) || targetCount < 1) targetCount = 10;
-    document.getElementById('display-q-count').innerText = targetCount;
 
     var weaks = getWeakTypes();
     var selected = [];
-    var selectedIds = {}; 
+    var selectedIds = {}; // ID重複チェック用キャッシュ
 
-    // カテゴリの全選択判定（全部未チェック＝全カテゴリ対象）
     var allActive = (!showWord && !showGrammar && !showPron);
 
-    // 1. 苦手問題優先チェックがある場合、最大4問まで対象カテゴリの弱点代替問題を仕込む
+    // 1. 苦手優先問題の挿入（最大4問、IDキャッシュに即登録）
     if (showReview || allActive) {
         var weakCount = 0;
         weaks.forEach(function(wType) {
             if (weakAlternativeBank[wType] && weakCount < 4) {
                 var altQ = Object.assign({}, weakAlternativeBank[wType]);
                 
-                // チェック状態と一致するか判定
                 var match = false;
                 if (allActive) match = true;
                 if (showWord && altQ.type === 'word') match = true;
                 if (showGrammar && altQ.type === 'grammar') match = true;
                 if (showPron && altQ.type === 'pron') match = true;
 
-                if (match) {
+                if (match && !selectedIds[altQ.id]) {
                     altQ.isWeakAlt = true;
                     selected.push(altQ);
-                    selectedIds[altQ.id] = true;
+                    selectedIds[altQ.id] = true; 
                     weakCount++;
                 }
             }
         });
     }
 
-    // 2. 出題対象プールを作成
+    // 2. 選択されたアクティブなプールを作成
     var masterPool = [];
     if (showWord || allActive) masterPool = masterPool.concat(questionBank.word);
     if (showGrammar || allActive) masterPool = masterPool.concat(questionBank.grammar);
     if (showPron || allActive) masterPool = masterPool.concat(questionBank.pron);
 
+    // シャッフルしてランダム性を高める
     masterPool = shuffleArray(masterPool);
 
-    // 3. 必要数に達するまでプールから抽出
+    // 3. IDが重複しないようにプールから厳格に抽出
     for (var i = 0; i < masterPool.length; i++) {
         if (selected.length >= targetCount) break;
         var q = masterPool[i];
+        
+        // ここが超重要：すでに選ばれたIDなら絶対にスキップする！
         if (!selectedIds[q.id]) {
             selected.push(q);
-            selectedIds[q.id] = true;
+            selectedIds[q.id] = true; // 登録して重複を防ぐ
         }
     }
 
-    // 4. 万が一問題数が足りない場合は重複を許して補充
-    var backupAttempts = 0;
-    while (selected.length < targetCount && backupAttempts < 50 && masterPool.length > 0) {
-        backupAttempts++;
-        var randomQ = masterPool[Math.floor(Math.random() * masterPool.length)];
-        selected.push(randomQ);
-    }
+    // 実際の最終出題数を表示に反映（ストックを越えた無謀な数を指定された場合は、重複させずストック上限数にする）
+    document.getElementById('display-q-count').innerText = selected.length;
 
-    currentQuestions = shuffleArray(selected).slice(0, targetCount);
+    currentQuestions = shuffleArray(selected);
     renderQuiz();
 }
 
@@ -496,7 +571,7 @@ function renderQuiz() {
     document.getElementById('result-section').style.display = 'none';
 
     if (currentQuestions.length === 0) {
-        container.innerHTML = '<p style="color:red; font-weight:bold;">該当する問題がありません。カテゴリ設定を確認してください。</p>';
+        container.innerHTML = '<p style="color:red; font-weight:bold;">該当する問題データが不足しているか、選択されていません。</p>';
         return;
     }
 
@@ -587,7 +662,7 @@ function gradeQuiz() {
     var scoreText = document.getElementById('score-text');
     scoreText.innerText = Math.round(score) + ' 点 / 100 点';
     
-    var generalFeedback = '<div class="feedback-box">演習お疲れ様でした！間違えた問題は自動的に苦手システムに記録され、上の「確認ボタン」からいつでも復習できます。</div>';
+    var generalFeedback = '<div class="feedback-box">演習お疲れ様でした！間違えた問題はいつでも「設定を反映してテスト開始」から再確認できます。</div>';
 
     var resultSection = document.getElementById('result-section');
     document.getElementById('feedback-content').innerHTML = generalFeedback + '<h3 style="margin-top:25px;">🧐 各問題のレビューと詳細解説</h3>' + feedbackHtml;
