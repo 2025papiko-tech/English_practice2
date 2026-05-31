@@ -159,7 +159,6 @@
         <p style="font-size: 0.9rem; margin: 0; color: #64748b;">CEFR B2レベル突破・重複なしカスタム演習システム</p>
     </header>
 
-    <!-- 設定セクション -->
     <div class="card">
         <div class="flex-header" style="border:none; margin-bottom:10px;">
             <h2 style="border: none; padding: 0; margin:0;">⚙️ 学習対象カテゴリ・出題数の設定</h2>
@@ -181,13 +180,11 @@
         <button type="button" class="btn btn-info" onclick="applySettingsAndCheck()">🔄 設定を反映してテスト開始＆弱点確認</button>
     </div>
 
-    <!-- 弱点履歴表示エリア -->
     <div class="card" id="history-section">
         <h2>⚠️ 選択したカテゴリの過去の間違い・弱点</h2>
         <div id="history-content"></div>
     </div>
 
-    <!-- 問題出題セクション -->
     <div class="card">
         <div class="flex-header">
             <h2 style="margin: 0; border: none; padding: 0;">📝 演習問題演習エリア (<span id="display-q-count">10</span>問)</h2>
@@ -202,7 +199,6 @@
         </form>
     </div>
 
-    <!-- 結果・採点セクション -->
     <div class="card" id="result-section">
         <h2>📊 採点結果</h2>
         <div class="score-display" id="score-text">0点 / 100点</div>
@@ -211,7 +207,7 @@
 </div>
 
 <script>
-// --- 大幅に補強した問題データベース（全カテゴリ増量、重複対策用IDを完全差別化） ---
+// --- 問題データベース（音声変化枠をさらに強化して増量） ---
 const questionBank = {
     word: [
         { id: 'W01', type: 'word', tag: '単語 (B2)', q: "The CEO decided to ________ the company's expansion plans due to economic uncertainty.", options: ["defer", "alleviate", "fluctuate", "adhere"], answer: 0, 
@@ -305,17 +301,7 @@ const questionBank = {
           explanation: "後ろに名詞句（the heavy rain...）が続いているため、前置詞の「despite（〜にもかかわらず）」が正解。[他] although, whereasは接続詞なのでSVが必要です。", 
           translation: "初日の激しい雨にもかかわらず、建設プロジェクトは予定通りに進んだ。",
           svoc: "<span class='svoc-text'>第1文型 (S V + M)</span><br><b>S:</b> The construction project / <b>V:</b> proceeded / <b>M:</b> on schedule / despite the heavy rain on opening day",
-          weakType: 'grammar_preposition', title: "前置詞 despite" },
-    　　　　id: 'G09', type: 'grammar', tag: '文法 (名詞節)', q: "The legal department handles ________ relates to intellectual property disputes.", options: ["whatever", "whomever", "which", "wherever"], answer: 0, 
-          explanation: "動詞handlesの目的語（名詞節）を作り、かつ節内の主語になれる複合関係代名詞「whatever（〜するものは何でも）」が正解です。", 
-          translation: "法務部は、知的財産の紛争に関することなら何でも処理する。",
-          svoc: "<span class='svoc-text'>第3文型 (S V O)</span><br><b>S:</b> The legal department / <b>V:</b> handles / <b>O:</b> whatever relates to intellectual property disputes (名詞節が目的語)",
-          weakType: 'grammar_whatever', title: "複合関係代名詞 whatever" },
-        { id: 'G10', type: 'grammar', tag: '文法 (使役動詞)', q: "The training coordinators had all the new hires ________ the security compliance test.", options: ["take", "taken", "to take", "took"], answer: 0, 
-          explanation: "使役動詞の「have + 人 + 原形不定詞（人に〜させる）」の構文です。new hires（新採用者）がテストを「受ける」という能動関係なので原形takeが入ります。", 
-          translation: "研修コーディネーターは、すべての新採用者にセキュリティコンプライアンステストを受けさせた。",
-          svoc: "<span class='svoc-text'>第5文型 (S V O C)</span><br><b>S:</b> The training coordinators / <b>V:</b> had / <b>O:</b> all the new hires / <b>C:</b> take the security compliance test (原形不定詞句が補語)",
-          weakType: 'grammar_causative', title: "使役動詞 have" }
+          weakType: 'grammar_preposition', title: "前置詞 despite" }
     ],
     pron: [
         { id: 'P01', type: 'pron', tag: '音声変化 (連結)', q: "ネイティブがフレーズ 'Check it out' を滑らかに発音した時、最も近い発音はどれか？", options: ["チェック・イット・アウト", "チェキダウ(ト)", "チェッイッアウ", "チェキラウ"], answer: 1, 
@@ -346,7 +332,7 @@ const questionBank = {
         { id: 'P06', type: 'pron', tag: '音声変化 (弱化)', q: "文中で 'for' (例: for business) が早く、弱く発音される際、母音はどのように変化するか？", options: ["ハッキリと『フォー』と伸ばす", "『ファ』や『フ』に近い短い曖昧な音になる", "『フー』に変わる", "完全に消えて発音されない"], answer: 1, 
           explanation: "【弱化 (Weak Form)】前置詞などの機能語は強くストレスが置かれない限り、母音が弱化して「シュワ音（曖昧母音）」となり、「ファ」に近い短い音になります。", 
           translation: "仕事で / 出張で",
-          svoc: "<span class='svoc-text'>修飾語句(M)</span><br>前置詞 for + 名詞 business による副詞句の音声ルールです。",
+          svoc: "<span class='svoc-text'>修飾語句(M)</span><br>前置詞 for +名詞 business による副詞句の音声ルールです。",
           weakType: 'pron_weak_for', title: "for の弱化" },
         { id: 'P07', type: 'pron', tag: '音声変化 (連結)', q: "フレーズ 'an asset' が1語のようになめらかに発音されたとき、最も近い発音はどれか？", options: ["アン・アセット", "アナセット", "ア・セット", "アン・セット"], answer: 1, 
           explanation: "【リンキング（連結）】子音で終わる単語（anの[n]）の直後に母音（assetの[æ]）が来ると、音が切れずに「アナセット」と繋がります。", 
@@ -357,11 +343,20 @@ const questionBank = {
           explanation: "【子音の脱落】[st]の[t]の直後に子音[b]が重なるため、3連続子音の真ん中である[t]の破裂がなくなり「マスビー」のようになります。", 
           translation: "〜に違いない / 〜でなければならない",
           svoc: "<span class='svoc-text'>助動詞＋動詞部分</span><br>文中で V (動詞) の一部を構成する助動詞フレーズの変化です。",
-          weakType: 'pron_must_be', title: "must be の [t] 脱落" }
+          weakType: 'pron_must_be', title: "must be の [t] 脱落" },
+        { id: 'P09', type: 'pron', tag: '音声変化 (弱化)', q: "文中で目的語の 'them' (例: Tell them) が極めて速く発音される際、省略されやすい先頭の音はどれか？", options: ["thの[ð]音", "eの[e]音", "mの[m]音", "どの音も省略されない"], answer: 0, 
+          explanation: "【代名詞の弱化・脱落】カジュアルな速い日常会話では、himの[h]やthemの[ð]が脱落し、Tell 'em（テラム）のように発音されることが多々あります。", 
+          translation: "彼らに言いなさい。",
+          svoc: "<span class='svoc-text'>第3文型 (命令文 V O)</span><br><b>(S):</b> 省略 / <b>V:</b> Tell / <b>O:</b> them",
+          weakType: 'pron_weak_them', title: "them の [th] 脱落" },
+        { id: 'P10', type: 'pron', tag: '音声変化 (連結)', q: "フレーズ 'put it on' をネイティブが滑らかに一息で発音した時の響きに最も近いものはどれか？", options: ["プット・イット・オン", "プリロン", "プッイッオン", "プローニュ"], answer: 1, 
+          explanation: "【連続フラップT】putの[t]がitの[i]と連結し、さらにitの[t]がonの[o]と連結。2つの[t]がどちらも母音に挟まれるため、ラ行化が重なり「プ・リ・ロ・ン」のように滑らかに変形します。", 
+          translation: "それを身に着ける / 服を着る",
+          svoc: "<span class='svoc-text'>第3文型 (命令文 V O + M)</span><br><b>(S):</b> 省略 / <b>V:</b> put / <b>O:</b> it / <b>M:</b> on (副詞)",
+          weakType: 'pron_putiton', title: "put it on の連続ラ行化" }
     ]
 };
 
-// 苦手克服用の代替問題
 const weakAlternativeBank = {
     'word_defer': { id: 'W_ALT01', type: 'word', tag: '苦手克服 (単語)', q: "The heavy storm forced the committee to ________ the annual outdoor gala.", options: ["postpone", "accelerate", "embody", "speculate"], answer: 0, 
       explanation: "deferの類似問題。postpone（延期する）が文脈上正解です。", 
@@ -498,7 +493,7 @@ function applySettingsAndCheck() {
     generateQuiz();
 }
 
-// 【アップデート】完全な重複ガード付きクイズ生成ロジック
+// 【バグ修正版】絶対フリーズしない、安全ストッパー付きクイズ生成ロジック
 function generateQuiz() {
     var showWord = document.getElementById('chk-word').checked;
     var showGrammar = document.getElementById('chk-grammar').checked;
@@ -510,11 +505,11 @@ function generateQuiz() {
 
     var weaks = getWeakTypes();
     var selected = [];
-    var selectedIds = {}; // ID重複チェック用キャッシュ
+    var selectedIds = {}; 
 
     var allActive = (!showWord && !showGrammar && !showPron);
 
-    // 1. 苦手優先問題の挿入（最大4問、IDキャッシュに即登録）
+    // 1. 苦手優先問題の挿入（最大4問）
     if (showReview || allActive) {
         var weakCount = 0;
         weaks.forEach(function(wType) {
@@ -543,22 +538,21 @@ function generateQuiz() {
     if (showGrammar || allActive) masterPool = masterPool.concat(questionBank.grammar);
     if (showPron || allActive) masterPool = masterPool.concat(questionBank.pron);
 
-    // シャッフルしてランダム性を高める
+    // シャッフルしてランダム性を担保
     masterPool = shuffleArray(masterPool);
 
-    // 3. IDが重複しないようにプールから厳格に抽出
+    // 3. 安全にプールから上限を超えないように抽出（ループを1周のみに制限して無限ループを完全防止）
     for (var i = 0; i < masterPool.length; i++) {
         if (selected.length >= targetCount) break;
         var q = masterPool[i];
         
-        // ここが超重要：すでに選ばれたIDなら絶対にスキップする！
         if (!selectedIds[q.id]) {
             selected.push(q);
-            selectedIds[q.id] = true; // 登録して重複を防ぐ
+            selectedIds[q.id] = true; 
         }
     }
 
-    // 実際の最終出題数を表示に反映（ストックを越えた無謀な数を指定された場合は、重複させずストック上限数にする）
+    // 実際の最終出題数を画面に反映（ストック上限を超えた場合は用意されている最大数になります）
     document.getElementById('display-q-count').innerText = selected.length;
 
     currentQuestions = shuffleArray(selected);
@@ -571,7 +565,7 @@ function renderQuiz() {
     document.getElementById('result-section').style.display = 'none';
 
     if (currentQuestions.length === 0) {
-        container.innerHTML = '<p style="color:red; font-weight:bold;">該当する問題データが不足しているか、選択されていません。</p>';
+        container.innerHTML = '<p style="color:#ef4444; font-weight:bold; padding: 10px; background:#fef2f2; border-radius:6px;">該当する問題データが不足しているか、選択されていません。</p>';
         return;
     }
 
