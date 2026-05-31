@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TOEIC 800+ 英語学習マスターアプリ</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --success: #10b981;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text: #1e293b;
+            --border: #e2e8f0;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 15px;
+            line-height: 1.6;
+        }
+
+        .container { max-width: 800px; margin: 0 auto; width: 100%; }
+        header { text-align: center; margin-bottom: 20px; }
+        h1 { color: var(--primary); margin-bottom: 5px; font-size: 1.8rem; }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--border);
+            width: 100%;
+        }
+
+        h2 { border-bottom: 2px solid var(--border); padding-bottom: 8px; margin-top: 0; color: #334155; font-size: 1.1rem; }
+
+        .tracker-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 10px;
+            margin-top: 15px;
+            margin-bottom: 15px;
+        }
+
+        .tracker-item {
+            display: flex;
+            align-items: center;
+            background: #f1f5f9;
+            padding: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .tracker-item input { margin-right: 8px; transform: scale(1.1); }
+
+        .config-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+            font-size: 0.95rem;
+            background: #f8fafc;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+        .config-row input[type="number"] {
+            width: 70px;
+            padding: 6px;
+            border-radius: 4px;
+            border: 1px solid var(--border);
+            font-size: 0.95rem;
+            text-align: center;
+        }
+
+        .question-block {
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 1px dashed var(--border);
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            color: white;
+        }
+        .badge-word { background-color: #ec4899; }
+        .badge-grammar { background-color: #3b82f6; }
+        .badge-pron { background-color: #f59e0b; }
+        .badge-weak { background-color: #ef4444; }
+
+        .question-text { font-size: 1rem; font-weight: 500; margin-bottom: 12px; word-wrap: break-word; }
+        .options-group { display: flex; flex-direction: column; gap: 8px; }
+
+        .option-label {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.95rem;
+        }
+
+        .option-label input { margin-right: 12px; min-width: 16px; }
+
+        .flex-header {
+            display: flex; flex-direction: column; gap: 10px; border-bottom: 2px solid var(--border); padding-bottom: 8px; margin-bottom: 20px;
+        }
+        @media(min-width: 480px) {
+            .flex-header { flex-direction: row; justify-content: space-between; align-items: center; }
+        }
+
+        .btn {
+            width: 100%; padding: 14px; border: none; border-radius: 8px; font-size: 1rem; font-weight: bold; cursor: pointer; text-align: center;
+        }
+        .btn-primary { background-color: var(--primary); color: white; }
+        .btn-secondary { background-color: #64748b; color: white; padding: 8px 12px; font-size: 0.85rem; }
+        .btn-info { background-color: #0284c7; color: white; padding: 12px; font-size: 0.95rem; margin-top: 5px; }
+
+        #result-section, #history-section { display: none; }
+        .score-display { text-align: center; font-size: 2rem; font-weight: bold; color: var(--success); margin-bottom: 20px; }
+        .feedback-box { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 15px; margin-top: 15px; }
+
+        .review-item {
+            border-radius: 8px; padding: 15px; margin-top: 15px; font-size: 0.9rem; border: 1px solid var(--border);
+        }
+        .review-wrong { background: #fef2f2; border-color: #fecaca; }
+        .review-correct { background: #f0fdf4; border-color: #bbf7d0; }
+        .review-info { background: #f0f9ff; border-color: #bae6fd; }
+
+        .analysis-box {
+            margin-top: 8px; padding: 10px; background: #f8fafc; border-left: 4px solid var(--primary); border-radius: 0 4px 4px 0; font-size: 0.88rem;
+        }
+        .svoc-text { font-family: monospace; background: #e2e8f0; padding: 2px 6px; border-radius: 4px; font-weight: bold; color: #0f172a; }
+
+        details { margin-top: 10px; background: #ffffff; padding: 8px; border-radius: 4px; border: 1px solid #cbd5e1; }
+        summary { cursor: pointer; font-weight: bold; color: #475569; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>TOEIC 800+ English Prep</h1>
+        <p style="font-size: 0.9rem; margin: 0; color: #64748b;">CEFR B2レベル突破・カスタマイズ演習システム</p>
+    </header>
+
+    <div class="card">
+        <h2 style="border: none; padding: 0; margin-bottom: 5px;">⚙️ 学習対象カテゴリ・出題数の設定</h2>
+        <p style="font-size:0.85rem; color:#64748b; margin:0 0 10px 0;">チェックを入れた項目のみが出題・履歴確認の対象になります（空欄時は全種類出題）。</p>
+        
+        <div class="tracker-grid">
+            <label class="tracker-item"><input type="checkbox" id="chk-word" onchange="saveProgress()"> 📊 単語問題</label>
+            <label class="tracker-item"><input type="checkbox" id="chk-grammar" onchange="saveProgress()"> ✍️ 文法テスト</label>
+            <label class="tracker-item"><input type="checkbox" id="chk-pron" onchange="saveProgress()"> 🗣️ 音声変化(発音)</label>
+            <label class="tracker-item"><input type="checkbox" id="chk-review" onchange="saveProgress()"> 🔄 苦手問題優先</label>
+        </div>
+
+        <div class="config-row">
+            <label for="quiz-count">📋 <b>本日の出題数:</b></label>
+            <input type="number" id="quiz-count" value="10" min="1" max="30"> 問
+        </div>
+
+        <button type="button" class="btn btn-info" onclick="applySettingsAndCheck()">🔄 上記の設定をアプリに反映して弱点を確認する</button>
+    </div>
+
+    <div class="card" id="history-section">
+        <h2>⚠️ 選択したカテゴリの過去の間違い・弱点</h2>
+        <div id="history-content"></div>
+    </div>
+
+    <div class="card">
+        <div class="flex-header">
+            <h2 style="margin: 0; border: none; padding: 0;">📝 演習問題演習エリア (<span id="display-q-count">10</span>問)</h2>
+            <button type="button" class="btn btn-secondary" style="width: auto; align-self: flex-start;" onclick="refreshQuestions()">🔄 別の問題に入れ替え</button>
+        </div>
+        
+        <form id="quiz-form">
+            <div id="questions-container"></div>
+            <div style="margin-top: 20px;">
+                <button type="button" class="btn btn-primary" onclick="gradeQuiz()">💯 採点する</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="card" id="result-section">
+        <h2>📊 採点結果</h2>
+        <div class="score-display" id="score-text">0点 / 100点</div>
+        <div id="feedback-content"></div>
+    </div>
+</div>
+
+<script>
+// --- 問題データベース（日本語訳、5文型SVOCM構造を追加） ---
+const questionBank = {
+    word: [
+        { id: 'W1', type: 'word', tag: '単語 (B2)', q: "The CEO decided to ________ the company's expansion plans due to economic uncertainty.", options: ["defer", "alleviate", "fluctuate", "adhere"], answer: 0, 
+          explanation: "defer（延期する）が正解。経済不確実性を理由に計画を延期します。[他] alleviate(緩和する), fluctuate(変動する)", 
+          translation: "最高経営責任者（CEO）は、経済の先行き不透明感を理由に、会社の拡大計画を延期することを決定した。",
+          svoc: "<span class='svoc-text'>第3文型 (S V O + M)</span><br><b>S:</b> The CEO / <b>V:</b> decided / <b>O:</b> to defer the company's expansion plans (不定詞句)<br><b>M:</b> due to economic uncertainty (原因を表す修飾語句)",
+          weakType: 'word_defer', title: "defer (延期する)" },
+        { id: 'W2', type: 'word', tag: '単語 (B2)', q: "The marketing campaign was highly ________, resulting in a 40% increase in regional sales.", options: ["lucrative", "redundant", "ambiguous", "stringent"], answer: 0, 
+          explanation: "lucrative（利益の上がる、実りの多い）が正解。40%の売上増という結果と一致します。", 
+          translation: "そのマーケティングキャンペーンは非常に実り多く、結果として地域売上の40%増加をもたらした。",
+          svoc: "<span class='svoc-text'>第2文型 (S V C + M)</span><br><b>S:</b> The marketing campaign / <b>V:</b> was / <b>C:</b> highly lucrative<br><b>M:</b> resulting in a 40% increase in regional sales (分詞構文による修飾表現)",
+          weakType: 'word_lucrative', title: "lucrative (利益の上がる)" },
+        { id: 'W3', type: 'word', tag: '単語 (C1)', q: "She handles customer complaints with great ________, always maintaining her composure.", options: ["adversity", "tact", "discrepancy", "relevance"], answer: 1, 
+          explanation: "tact（機転、如才なさ）が正解。冷静さを保ちつつ上手に対応する能力を指します。", 
+          translation: "彼女は常に冷静さを保ちながら、素晴らしい機転を利かせて顧客の苦情を処理している。",
+          svoc: "<span class='svoc-text'>第3文型 (S V O + M)</span><br><b>S:</b> She / <b>V:</b> handles / <b>O:</b> customer complaints<br><b>M:</b> with great tact (副詞句) / always maintaining her composure (分詞句修飾)",
+          weakType: 'word_tact', title: "tact (機転・如才なさ)" },
+        { id: 'W4', type: 'word', tag: '単語 (B2)', q: "The new regulations will ________ a complete overhaul of our current safety protocols.", options: ["necessitate", "preclude", "advocate", "curtail"], answer: 0, 
+          explanation: "necessitate（〜を必要とさせる）が正解。新しい規制によって見直しが必要になります。", 
+          translation: "新しい規制は、私たちの現在の安全プロトコルの全面的な見直しを必要とさせるだろう。",
+          svoc: "<span class='svoc-text'>第3文型 (S V O)</span><br><b>S:</b> The new regulations / <b>V:</b> will necessitate / <b>O:</b> a complete overhaul of our current safety protocols",
+          weakType: 'word_necessitate', title: "necessitate (必要とする)" },
+        { id: 'W5', type: 'word', tag: '単語 (B2)', q: "We need to find a ________ solution that addresses both budgetary constraints and quality requirements.", options: ["viable", "volatile", "vague", "vulnerable"], answer: 0, 
+          explanation: "viable（実行可能な、実用的な）が正解。予算と品質を両立させる「現実的な解決策」を指します。", 
+          translation: "私たちは、予算の制約と品質の要求の両方に対応する、実行可能な解決策を見つける必要がある。",
+          svoc: "<span class='svoc-text'>第3文型 (S V O)</span><br><b>S:</b> We / <b>V:</b> need / <b>O:</b> to find a viable solution (不定詞句)<br>※solutionの後に続くthat以下は、solutionを修飾する関係代名詞節(M)",
+          weakType: 'word_viable', title: "viable (実行可能な)" }
+    ],
+    grammar: [
+        { id: 'G1', type: 'grammar', tag: '文法 (時制)', q: "By the time the new manager arrives next month, the team ________ the project for half a year.", options: ["will have been conducting", "has conducted", "conducted", "is conducting"], answer: 0, 
+          explanation: "未来完了進行形が正解。来月の基準点の時点で「半年間の継続」を表します。", 
+          translation: "来月新しいマネージャーが到着するまでに、チームはそのプロジェクトを半年間ずっと実施していることになる。",
+          svoc: "<span class='svoc-text'>第3文型 (S V O + M)</span><br><b>M:</b> By the time the new manager arrives next month (副詞節)<br><b>S:</b> the team / <b>V:</b> will have been conducting / <b>O:</b> the project<br><b>M:</b> for half a year (期間の修飾語)",
+          weakType: 'grammar_tense', title: "未来完了進行形" },
+        { id: 'G2', type: 'grammar', tag: '文法 (比較級)', q: "The implementation of the new software proved to be ________ more challenging than anticipated.", options: ["very", "far", "so", "as"], answer: 1, 
+          explanation: "比較級(more...)を強調できる副詞は「far」や「much」です。", 
+          translation: "新しいソフトウェアの導入は、予想されていたよりも遥かに困難であることが判明した。",
+          svoc: "<span class='svoc-text'>第2文型 (S V C + M)</span><br><b>S:</b> The implementation of the new software / <b>V:</b> proved / <b>C:</b> to be far more challenging (補語となる不定詞句)<br><b>M:</b> than anticipated (比較対象の修飾句)",
+          weakType: 'grammar_comparative', title: "比較級の強調" },
+        { id: 'G3', type: 'grammar', tag: '文法 (仮定法)', q: "If the technical issue ________ resolved yesterday, our clients would be satisfied now.", options: ["had been", "was", "has been", "would have been"], answer: 0, 
+          explanation: "過去の条件（If+過去完了）と現在の結果（would+原形）を組み合わせた混成仮定法です。", 
+          translation: "もしその技術的な問題が昨日解決されていたなら、クライアントは今頃満足していただろうに。",
+          svoc: "<span class='svoc-text'>第2文型 (S V C + M)</span><br><b>M:</b> If the technical issue had been resolved yesterday (条件を表す副詞節)<br><b>S:</b> our clients / <b>V:</b> would be / <b>C:</b> satisfied<br><b>M:</b> now (時を表す副詞)",
+          weakType: 'grammar_conditional', title: "混成仮定法" },
+        { id: 'G4', type: 'grammar', tag: '文法 (時制)', q: "Ever since the merger was announced last week, the stock prices ________ unpredictably.", options: ["have been fluctuating", "fluctuated", "are fluctuating", "had fluctuated"], answer: 0, 
+          explanation: "「Ever since（～以来ずっと）」という過去の起点から現在までの継続を表す現在完了進行形が最適です。", 
+          translation: "先週合併が発表されて以来ずっと、株価は予測不可能に変動し続けている。",
+          svoc: "<span class='svoc-text'>第1文型 (S V + M)</span><br><b>M:</b> Ever since the merger was announced last week (副詞節)<br><b>S:</b> the stock prices / <b>V:</b> have been fluctuating<br><b>M:</b> unpredictably (副詞修飾語)",
+          weakType: 'grammar_since', title: "Ever since構文" }
+    ],
+    pron: [
+        { id: 'P1', type: 'pron', tag: '音声変化 (連結)', q: "ネイティブがフレーズ 'Check it out' を滑らかに発音した時、最も近い発音はどれか？", options: ["チェック・イット・アウト", "チェキダウ(ト)", "チェッイッアウ", "チェキラウ"], answer: 1, 
+          explanation: "【リンキング＆フラップT】Checkの[k]とitの[i]が合体。さらにitの[t]が母音に挟まれて日本語のラ行・ダ行のように変化します。", 
+          translation: "（それを）確認してみよう！ / チェックしてみて！",
+          svoc: "<span class='svoc-text'>第3文型 (命令文 V O + M)</span><br><b>(S):</b> 省略 / <b>V:</b> Check / <b>O:</b> it / <b>M:</b> out (副詞)",
+          weakType: 'pron_linking', title: "Check it out の連結" },
+        { id: 'P2', type: 'pron', tag: '音声変化 (脱落)', q: "文中で 'I don't know' が早口で発音される際、[t]の音が消えてどのように聞こえるか？", options: ["アイ ドント ノウ", "アイ ドン ノウ", "アイ ドッノウ", "アドノ"], answer: 1, 
+          explanation: "【リダクション（脱落）】破裂音[t]の後に子音[n]が続くため、[t]の破裂がなくなり「アイ ドン ノウ」に聞こえます。", 
+          translation: "私は（それを）知りません。",
+          svoc: "<span class='svoc-text'>第3文型 (S V O)</span><br><b>S:</b> I / <b>V:</b> don't know / <b>O:</b> (itなどの目的語が会話上省略されています)",
+          weakType: 'pron_reduction', title: "don't の [t] 脱落" },
+        { id: 'P3', type: 'pron', tag: '音声変化 (フラップT)', q: "‘meeting’ や ‘better’ の [t] 音が、アメリカ英語のネイティブスピーカーに最も近く発音されているものはどれか？", options: ["ミーティング / ベター", "ミッイン / ベッアー", "ミーリング / ベラー", "ミースィング / ベサー"], answer: 2, 
+          explanation: "【フラップT】母音に挟まれた[t]音は、舌先を弾くため日本語のラ行（d音に近い）の音（ミーリング/ベラー）に変形します。", 
+          translation: "会議 / より良い",
+          svoc: "<span class='svoc-text'>単語のため文型対象外</span><br>名詞「meeting」および形容詞・副詞「better」の単体発音ルールです。",
+          weakType: 'pron_flapt', title: "meeting/betterのフラップ" }
+    ]
+};
+
+// 苦手克服用の代替問題
+const weakAlternativeBank = {
+    'word_defer': { id: 'W1_alt', type: 'word', tag: '苦手克服 (単語)', q: "The heavy storm forced the committee to ________ the annual outdoor gala.", options: ["postpone", "accelerate", "embody", "speculate"], answer: 0, 
+      explanation: "deferの類似問題。postpone（延期する）が文脈上正解です。", 
+      translation: "激しい嵐のため、委員会は年に一度の屋外祝賀会を延期せざるを得なかった。",
+      svoc: "<span class='svoc-text'>第5文型 (S V O C)</span><br><b>S:</b> The heavy storm / <b>V:</b> forced / <b>O:</b> the committee / <b>C:</b> to postpone the annual outdoor gala (不定詞句が補語)",
+      weakType: 'word_defer', title: "defer代替" },
+    'grammar_tense': { id: 'G1_alt', type: 'grammar', tag: '苦手克服 (時制)', q: "By next Friday, I ________ here for exactly ten years.", options: ["will have worked", "am working", "have worked", "worked"], answer: 0, 
+      explanation: "未来の基準点（By next Friday）があるため、未来完了「will have worked」が正解。", 
+      translation: "来週の金曜日で、私はここにちょうど10年間勤めていることになります。",
+      svoc: "<span class='svoc-text'>第1文型 (S V + M)</span><br><b>M:</b> By next Friday (時を表す副詞句) / <b>S:</b> I / <b>V:</b> will have worked / <b>M:</b> here (副詞) / for exactly ten years (期間の副詞句)",
+      weakType: 'grammar_tense', title: "時制代替" }
+};
+
+let currentQuestions = [];
+
+window.onload = function() {
+    loadProgress();
+    generateQuiz(); 
+};
+
+function saveProgress() {
+    var progress = {
+        word: document.getElementById('chk-word').checked,
+        grammar: document.getElementById('chk-grammar').checked,
+        pron: document.getElementById('chk-pron').checked,
+        review: document.getElementById('chk-review').checked,
+        count: document.getElementById('quiz-count').value,
+        date: new Date().toDateString()
+    };
+    localStorage.setItem('toeic_app_progress', JSON.stringify(progress));
+}
+
+function loadProgress() {
+    var saved = localStorage.getItem('toeic_app_progress');
+    if (saved) {
+        var progress = JSON.parse(saved);
+        if (progress.date === new Date().toDateString()) {
+            document.getElementById('chk-word').checked = progress.word;
+            document.getElementById('chk-grammar').checked = progress.grammar;
+            document.getElementById('chk-pron').checked = progress.pron;
+            document.getElementById('chk-review').checked = progress.review;
+            if(progress.count) document.getElementById('quiz-count').value = progress.count;
+        }
+    }
+}
+
+function getWeakTypes() {
+    var weakData = localStorage.getItem('toeic_app_weak');
+    return weakData ? JSON.parse(weakData) : [];
+}
+
+function saveWeakType(type) {
+    var weaks = getWeakTypes();
+    if (!weaks.includes(type)) {
+        weaks.push(type);
+        localStorage.setItem('toeic_app_weak', JSON.stringify(weaks));
+    }
+}
+
+function removeWeakType(type) {
+    var weaks = getWeakTypes();
+    weaks = weaks.filter(function(t) { return t !== type; });
+    localStorage.setItem('toeic_app_weak', JSON.stringify(weaks));
+}
+
+// 安定シャッフル関数
+function shuffleArray(array) {
+    var clone = array.slice(0);
+    for (var i = clone.length - 1; i > 0; i--) {
+        var j = Math.floor(Math.random() * (i + 1));
+        var temp = clone[i];
+        clone[i] = clone[j];
+        clone[j] = temp;
+    }
+    return clone;
+}
+
+// ボタン流用機能：チェックに基づいて弱点確認を行い、かつ問題も即座に再生成する
+function applySettingsAndCheck() {
+    saveProgress();
+    
+    // 1. 弱点の確認表示
+    var showWord = document.getElementById('chk-word').checked;
+    var showGrammar = document.getElementById('chk-grammar').checked;
+    var showPron = document.getElementById('chk-pron').checked;
+    var showReview = document.getElementById('chk-review').checked;
+    var weaks = getWeakTypes();
+    
+    var historySection = document.getElementById('history-section');
+    var historyContent = document.getElementById('history-content');
+
+    // もしすべて未チェックなら全表示扱いにするロジック
+    var noCheck = (!showWord && !showGrammar && !showPron && !showReview);
+
+    var html = '';
+    var matchCount = 0;
+    var allItems = questionBank.word.concat(questionBank.grammar).concat(questionBank.pron);
+    Object.keys(weakAlternativeBank).forEach(function(k) { allItems.push(weakAlternativeBank[k]); });
+
+    var seenWeakTypes = {};
+
+    allItems.forEach(function(item) {
+        if (!weaks.includes(item.weakType)) return;
+        if (seenWeakTypes[item.weakType]) return;
+
+        var isTarget = false;
+        if (noCheck) isTarget = true;
+        if (showWord && item.type === 'word') isTarget = true;
+        if (showGrammar && item.type === 'grammar') isTarget = true;
+        if (showPron && item.type === 'pron') isTarget = true;
+if (showReview) isTarget = true;
+
+        if (isTarget) {
+            seenWeakTypes[item.weakType] = true;
+            matchCount++;
+            html += 
+                '<div class="review-item review-info">' +
+                    '<strong>⚠️ 弱点項目: ' + (item.title || item.weakType) + ' [' + item.tag + ']</strong><br>' +
+                    '<p style="margin:5px 0;"><b>過去の間違い例:</b> ' + item.q + '</p>' +
+                    '<div class="analysis-box"><b>訳:</b> ' + item.translation + '<br><b>構文:</b> ' + item.svoc + '</div>' +
+                '</div>';
+        }
+    });
+
+    if (noCheck && weaks.length > 0) {
+        // 何もチェックがなくて弱点がある場合は全量を出す
+    } else if (matchCount === 0 && !noCheck) {
+        html = '<div class="feedback-box">🎉 選択されたカテゴリに現在記録されている弱点はありません！</div>';
+    }
+
+    if(html !== '') {
+        historyContent.innerHTML = html;
+        historySection.style.display = 'block';
+    } else {
+        historySection.style.display = 'none';
+    }
+
+    // 2. 下部の演習問題をこの設定で即座に作り直す
+    generateQuiz();
+}
+
+// 【コア機能】ユーザーの設定（カテゴリチェック、出題数）を完全に反映して問題作成
+function generateQuiz() {
+    var showWord = document.getElementById('chk-word').checked;
+    var showGrammar = document.getElementById('chk-grammar').checked;
+    var showPron = document.getElementById('chk-pron').checked;
+    var showReview = document.getElementById('chk-review').checked;
+    
+    // 設定された出題数を取得（未入力なら10問）
+    var targetCount = parseInt(document.getElementById('quiz-count').value);
+    if (isNaN(targetCount) || targetCount < 1) targetCount = 10;
+    document.getElementById('display-q-count').innerText = targetCount;
+
+    var weaks = getWeakTypes();
+    var selected = [];
+    var selectedIds = {}; 
+
+    // カテゴリの全選択判定（全部未チェック＝全カテゴリ対象）
+    var allActive = (!showWord && !showGrammar && !showPron);
+
+    // 1. 苦手問題優先チェックがある場合、最大4問まで対象カテゴリの弱点代替問題を仕込む
+    if (showReview || allActive) {
+        var weakCount = 0;
+        weaks.forEach(function(wType) {
+            if (weakAlternativeBank[wType] && weakCount < 4) {
+                var altQ = Object.assign({}, weakAlternativeBank[wType]);
+                
+                // チェック状態と一致するか判定
+                var match = false;
+                if (allActive) match = true;
+                if (showWord && altQ.type === 'word') match = true;
+                if (showGrammar && altQ.type === 'grammar') match = true;
+                if (showPron && altQ.type === 'pron') match = true;
+
+                if (match) {
+                    altQ.isWeakAlt = true;
+                    selected.push(altQ);
+                    selectedIds[altQ.id] = true;
+                    weakCount++;
+                }
+            }
+        });
+    }
+
+    // 2. 出題対象プールを作成
+    var masterPool = [];
+    if (showWord || allActive) masterPool = masterPool.concat(questionBank.word);
+    if (showGrammar || allActive) masterPool = masterPool.concat(questionBank.grammar);
+    if (showPron || allActive) masterPool = masterPool.concat(questionBank.pron);
+
+    masterPool = shuffleArray(masterPool);
+
+    // 3. 必要数に達するまでプールから抽出
+    for (var i = 0; i < masterPool.length; i++) {
+        if (selected.length >= targetCount) break;
+        var q = masterPool[i];
+        if (!selectedIds[q.id]) {
+            selected.push(q);
+            selectedIds[q.id] = true;
+        }
+    }
+
+    // 4. 万が一問題数が足りない場合は重複を許して補充
+    var backupAttempts = 0;
+    while (selected.length < targetCount && backupAttempts < 50 && masterPool.length > 0) {
+        backupAttempts++;
+        var randomQ = masterPool[Math.floor(Math.random() * masterPool.length)];
+        selected.push(randomQ);
+    }
+
+    currentQuestions = shuffleArray(selected).slice(0, targetCount);
+    renderQuiz();
+}
+
+function renderQuiz() {
+    var container = document.getElementById('questions-container');
+    container.innerHTML = '';
+    document.getElementById('result-section').style.display = 'none';
+
+    if (currentQuestions.length === 0) {
+        container.innerHTML = '<p style="color:red; font-weight:bold;">該当する問題がありません。カテゴリ設定を確認してください。</p>';
+        return;
+    }
+
+    currentQuestions.forEach(function(q, index) {
+        var badgeClass = 'badge-word';
+        if (q.type === 'grammar') badgeClass = 'badge-grammar';
+        if (q.type === 'pron') badgeClass = 'badge-pron';
+        
+        var badgeText = q.tag;
+        if (q.isWeakAlt) {
+            badgeClass = 'badge-weak';
+            badgeText = '🔥 苦手復習 (' + q.tag + ')';
+        }
+
+        var qBlock = document.createElement('div');
+        qBlock.className = 'question-block';
+        
+        var optionsHtml = '';
+        q.options.forEach(function(opt, optIdx) {
+            optionsHtml += 
+                '<label class="option-label">' +
+                    '<input type="radio" name="question-' + index + '" value="' + optIdx + '">' +
+                    opt +
+                '</label>';
+        });
+
+        qBlock.innerHTML = 
+            '<span class="badge ' + badgeClass + '">' + badgeText + '</span>' +
+            '<div class="question-text">Q' + (index + 1) + '. ' + q.q + '</div>' +
+            '<div class="options-group">' + optionsHtml + '</div>';
+            
+        container.appendChild(qBlock);
+    });
+}
+
+function gradeQuiz() {
+    if(currentQuestions.length === 0) return;
+
+    var score = 0;
+    var feedbackHtml = '';
+    var answeredCount = 0;
+    var pointsPerQuestion = 100 / currentQuestions.length; 
+
+    currentQuestions.forEach(function(q, index) {
+        var radios = document.getElementsByName('question-' + index);
+        var selectedValue = -1;
+        
+        for (var i = 0; i < radios.length; i++) {
+            if (radios[i].checked) {
+                selectedValue = parseInt(radios[i].value);
+                break;
+            }
+        }
+
+        if (selectedValue !== -1) answeredCount++;
+        var isCorrect = (selectedValue === q.answer);
+        
+        if (isCorrect) {
+            score += pointsPerQuestion;
+            if (q.weakType) removeWeakType(q.weakType);
+        } else {
+            if (q.weakType) saveWeakType(q.weakType);
+        }
+
+        feedbackHtml += 
+            '<div class="review-item ' + (isCorrect ? 'review-correct' : 'review-wrong') + '">' +
+                '<strong>' + (isCorrect ? '🟢 正解！' : '❌ 不正解...') + ' Q' + (index + 1) + ' [' + q.tag + ']</strong><br>' +
+                '<span style="font-size:0.95rem;">問題: ' + q.q + '</span><br>' +
+                '<span>あなたの選択: <b style="color:' + (isCorrect ? '#16a34a' : '#dc2626') + '">' + (selectedValue !== -1 ? q.options[selectedValue] : '未解答') + '</b></span><br>' +
+                '<span>正解: <b>' + q.options[q.answer] + '</b></span><br>' +
+                '<details>' +
+                    '<summary>💡 日本語訳・SVOC構文・解説を見る</summary>' +
+                    '<div style="margin-top:8px; padding:10px; background:#f8fafc; border-radius:4px; border:1px solid #e2e8f0;">' +
+                        '<p style="margin:0 0 8px 0; color:#0f172a;"><b>【日本語訳】</b><br>' + (q.translation || "翻訳データはありません。") + '</p>' +
+                        '<p style="margin:0 0 8px 0; color:#1e3a8a; line-height:1.5;"><b>【文構造・5文型】</b><br>' + (q.svoc || "構文解析データはありません。") + '</p>' +
+                        '<p style="margin:0; color:#334155; font-size:0.85rem; border-top:1px solid #e2e8f0; padding-top:6px;"><b>【解説】</b><br>' + q.explanation + '</p>' +
+                    '</div>' +
+                '</details>' +
+            '</div>';
+    });
+
+    if (answeredCount < currentQuestions.length) {
+        if (!confirm("まだ解いていない問題があります。このまま採点に進みますか？")) {
+            return;
+        }
+    }
+
+    var scoreText = document.getElementById('score-text');
+    scoreText.innerText = Math.round(score) + ' 点 / 100 点';
+    
+    var generalFeedback = '<div class="feedback-box">演習お疲れ様でした！間違えた問題は自動的に苦手システムに記録され、上の「確認ボタン」からいつでも復習できます。</div>';
+
+    var resultSection = document.getElementById('result-section');
+    document.getElementById('feedback-content').innerHTML = generalFeedback + '<h3 style="margin-top:25px;">🧐 各問題のレビューと詳細解説</h3>' + feedbackHtml;
+    resultSection.style.display = 'block';
+    resultSection.scrollIntoView({ behavior: 'smooth' });
+}
+
+function refreshQuestions() {
+    generateQuiz();
+}
+</script>
+
+</body>
+</html>
